@@ -12,15 +12,15 @@ X = dataset.iloc[:, :-1].values
 # Deleting randomly some data
 i=0
 j=0
-for column in dataset:
-    i+=1
+df = pd.DataFrame(X)
+for column in df:
     j=0
     print('Columna: %d' %i)
-    for row in dataset.iterrows():
-        j+=1
+    for row in df.iterrows():
         if i*j%random.randint(1000,2000)==0:
             X[j,i] = ''
-df = pd.DataFrame(X)
+        j+=1
+    i+=1
 
 # Here we can perform some data preprocessing 
 
