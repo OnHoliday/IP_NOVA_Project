@@ -5,22 +5,22 @@ import random
 
 # Importing the dataset
 dataset = pd.read_csv('Churn_Modelling.csv')
-
 y = dataset.iloc[:, 13].values
 X = dataset.iloc[:, :-1].values
+a = np.shape(X)
 
 # Deleting randomly some data
 i=0
-j=0
-df = pd.DataFrame(X)
-for column in df:
+for column in range(a[1]-1):
     j=0
+    i+=1
     print('Columna: %d' %i)
-    for row in df.iterrows():
+    for row in range(a[0]-1):
+        j+=1
         if i*j%random.randint(1000,2000)==0:
             X[j,i] = ''
-        j+=1
-    i+=1
+   
+df = pd.DataFrame(X)
 
 # Here we can perform some data preprocessing 
 
