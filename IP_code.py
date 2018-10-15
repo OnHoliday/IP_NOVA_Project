@@ -66,7 +66,7 @@ X[:,[0,3,4,5,6,9]] = imputer.transform(X[:,[0,3,4,5,6,9]])
 X[:,[3,4,6]] = X[:,[3,4,6]].astype(int)
 
 ### 3 ENCODING CATEGORICAL VARIABLES FOR GEOGRAPHT AND GENDER
-from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder #this also works with pandas!
 
 labelEncoder1 = LabelEncoder()
 X[:,1] = labelEncoder1.fit_transform(X[:,1])
@@ -87,6 +87,16 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, rando
 #X_test = features.iloc[test_index]
 #y_test = y.iloc[test_index]
 
+### z-scoring with scaling dummy variables ##################
+#from scipy.stats import zscore
+
+#X_train = pd.DataFrame(X_train)#converting to use the df.methods
+#X_test = pd.DataFrame(X_test)#converting to use the df.methods
+
+#X_train = X_train.apply(zscore)#applying the z-scoring
+#X_test = X_test.apply(zscore)#applying the z-scoring
+
+
 ### 5 FEATURE STANDARD SCALING  with scaling dummy variables ##################
 #from sklearn.preprocessing import StandardScaler
 #sc_X = StandardScaler()
@@ -104,6 +114,21 @@ X_train[:,7:9] = sc_X.fit_transform(X_train[:,7:9])
 X_test[:,7:9] = sc_X.transform(X_test[:,7:9])
 X_train[:,11:12] = sc_X.fit_transform(X_train[:,11:12])
 X_test[:,11:12] = sc_X.transform(X_test[:,11:12])
+
+### z-scoring  without scaling dummy variables ###############
+#from scipy.stats import zscore
+
+
+#X_train[:,3:4] = zscore(X_train[:,3:4])
+#X_test[:,3:4] = zscore(X_test[:,3:4])
+#X_train[:,5:6] = zscore(X_train[:,5:6])
+#X_test[:,5:6] = zscore(X_test[:,5:6])
+#X_train[:,7:9] = zscore(X_train[:,7:9])
+#X_test[:,7:9] = zscore(X_test[:,7:9])
+#X_train[:,11:12] = zscore(X_train[:,11:12])
+#X_test[:,11:12] = zscore(X_test[:,11:12])
+
+
 
 
 ###############################################################################
@@ -152,7 +177,13 @@ pd.set_option('max_colwidth',30)
 #pd.reset_option('^display.', silent=True)
 X.corr()
 X.cov()
- 
+
+#visusalistion of the correlations in a heatmap
+import seaborn as sns
+sns.set(rc={'figure.figsize':(20,20)})
+sns.heatmap(X.corr(), annot=True)
+sns.heatmap(X.cov(), annot=True)
+
 
 ### Multiple Linear Regression
 from sklearn.linear_model import LinearRegression
@@ -267,4 +298,6 @@ a.describe()
 #plt.ylabel('PC2')
 #plt.legend()
 #plt.show()
+
+
 
