@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Oct 19 22:01:18 2018
+
+@author: dominika.leszko
+"""
+
 ### CHURN MODELING - DATA SCIENCE PROJECT FOR INTRODUCTION TO PROGRAMMING #####
 ###############################################################################
 
@@ -6,6 +13,8 @@ import pandas as pd
 import random 
 import seaborn as sns
 
+#display all columns
+pd.set_option('display.max_columns', None)
 
 ###########  DATA PREPROCESSING  ##############################################
 ###############################################################################
@@ -35,17 +44,24 @@ X.drop(['RowNumber'], axis=1, inplace=True)
 
 ### 4. ENCODING CATEGORICAL VARIABLES #########################################
 
-from sklearn.preprocessing import LabelEncoder, OneHotEncoder
-#labelEncoder1 = LabelEncoder()
-#X['Geography'] = labelEncoder1.fit_transform(X['Geography'])
-labelEncoder2 = LabelEncoder()
-X['Gender'] = labelEncoder2.fit_transform(X['Gender'])
-#onehotencoder = OneHotEncoder(categorical_features = [1])
-#X = onehotencoder.fit_transform(X).toarray()
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder#DOMINIKA: LabelEnconder for ordinal!
+##labelEncoder1 = LabelEncoder()
+##X['Geography'] = labelEncoder1.fit_transform(X['Geography'])
+#labelEncoder2 = LabelEncoder()
+#X['Gender'] = labelEncoder2.fit_transform(X['Gender'])
+##onehotencoder = OneHotEncoder(categorical_features = [1])
+##X = onehotencoder.fit_transform(X).toarray()
 
 degree_dummies=pd.get_dummies(X['Geography'], drop_first=False)
 X.drop(['Geography'], axis=1, inplace=True)
 X=pd.concat([X, degree_dummies], axis=1)
+
+degree_dummies2=pd.get_dummies(X['Gender'], drop_first=True)
+X.drop(['Gender'], axis=1, inplace=True)
+X=pd.concat([X, degree_dummies2], axis=1)
+
+X.head()
+X.info()
 
 
 ### 5. SPLITTING THE DATASET INTO TRAINING SET AND TEST SET ###################
@@ -62,6 +78,7 @@ from sklearn.preprocessing import StandardScaler
 scaler = StandardScaler()
 X_train = scaler.fit_transform(X_train)
 X_test = scaler.transform(X_test)
+
 
 #    6.1.1 without scaling dummy variables 
 
@@ -94,32 +111,35 @@ X_test = scaler.transform(X_test)
 import matplotlib.pyplot as plt
 
 X['Balance'].describe()
-
 dataset.groupby('Exited').size()
-benchmark = max(dataset.groupby('Exited').size()[0], dataset.groupby('Exited').size()[0])/(dataset.groupby('Exited').size()[0] + dataset.groupby('Exited').size()[1])
-
+benchmark = max(pd.DataFrame(y_test).groupby('Exited').size()[0], pd.DataFrame(y_test).groupby('Exited').size()[1])/(pd.DataFrame(y_test).groupby('Exited').size()[0] + pd.DataFrame(y_test).groupby('Exited').size()[1])
 print(pd.DataFrame(y_test).groupby('Exited').size())
 print('>>>   Percentage of clients who Exited is : {0:.2%}'.format(y.index.isin(list(y.index[(y == 1 )== True])).sum()/(y.index.isin(list(y.index[(y == 1 )== True] )).sum()+y.index.isin(list(y.index[(y == 1 )== False])).sum())))
 print(">>>   Base line accuracy of prediction is {0:.2%}".format(benchmark))        
 
 
-#### 2 HISTOGRAMS AND SCATTER PLOT #############################################
-# interesting columns for histograms3,5,6,7,8,11
+#### 2 HISTOGRAMS AND SCATTER PLOTS #############################################
+# interesting columns for histograms 3,5,6,7,8,11
 plt.hist(X['CreditScore'])
 plt.hist(X['Age']) # possible dyscretization opporutity to split into young 0-30, 30-40, 40+
 plt.hist(X['Tenure'])
 plt.hist(X['Balance']) # split into those with 0, 0-100k, 100k-125k - 125k+
-plt.hist(X['NumOfProducts']) # mayby it should be encoded into 1, 2 and other as binnary data
+plt.hist(X['NumOfProducts']) # maybe it should be encoded into 1, 2 and other as binary data
 plt.hist(X['EstimatedSalary'])
 
 from pandas.plotting import scatter_matrix
 scatter_matrix(dataset)
 plt.show()
+plt.tight_layout()
+
 
 #df.plot(kind='box', subplots=True, layout=(3, 4), sharex = False, sharey=False)
 #plt().show()
 
 ### 3 CORRELATION #############################################################
+
+
+sns.pairplot(dataset, hue='Exited')
 
 pd.options.display.max_columns = 12
 pd.set_option('expand_frame_repr', True)
@@ -151,20 +171,21 @@ plt.hist(y_pred)
 
 # Assiging predicted values into decision
 for q in range(len(y_pred)):
-    if y_pred[q]<0.48: #(max(y_pred) - min(y_pred))/2:
+    if y_pred[q]<0.48: #(max(y_pred) - min(y_pred))/2:#DOMINIKA:Konrad, is it some general rule or your idea?
         y_pred[q]=0
     else: y_pred[q] = 1
     
 # Confusion matrix
 from sklearn.metrics import confusion_matrix
 cm = confusion_matrix(y_test, y_pred)
+print(cm)
 (cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1])
 
 benchmark = max(benchmark, (cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1]))       
 print(cm)
 print('>>>   Accuracy of this model is : {0:.2%}'.format((cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1])))
-print(">>>   Best accuracy of prediction was {0:.2%}".format(benchmark)) 
-print(">>>   Current best prediction is {0:.2%}".format(benchmark))        
+print(">>>   Best accuracy of prediction was {0:.2%}".format(benchmark))#DOMINIKA: which benchmark? from y_test or y_pred?
+print(">>>   Current best prediction is {0:.2%}".format(benchmark))
 
 
 ####  2. MULTIPLE LINEAR REGRESSION WITH BACKWARD ELIMINATION #################
@@ -232,7 +253,6 @@ pca = PCA(n_components = 2)
 X_train_pca = pca.fit_transform(X_train_pca)
 X_test_pca = pca.transform(X_test_pca)
 explained_variance = pca.explained_variance_ratio_
-
 
 ### 5 Fitting Logistic Regression to the Training set
 from sklearn.linear_model import LogisticRegression
@@ -351,5 +371,57 @@ benchmark = max(benchmark, (cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][
 print(cm)
 print('>>>   Accuracy of this model is : {0:.2%}'.format((cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1])))
 print(">>>   Best accuracy of prediction was {0:.2%}".format(benchmark)) 
-print(">>>   Current best prediction is {0:.2%}".format(benchmark))        
+print(">>>   Current best prediction is {0:.2%}".format(benchmark))       
 
+#############################SUPPORT VECTOR MACHINES###########################
+
+X_svm = X.copy()
+X_train_svm = X_train.copy()
+X_test_svm = X_test.copy()
+y_train_svm = y_train.copy()
+
+from sklearn.svm import SVC
+
+svc=SVC()
+
+svc.fit(X_train_svm, y_train_svm)
+
+predictions=svc.predict(X_test_svm)
+
+from sklearn.metrics import confusion_matrix, classification_report
+
+svm_matrix=confusion_matrix(y_test, predictions)
+
+print(svm_matrix)
+
+(svm_matrix[0][0]+svm_matrix[1][1])/(svm_matrix[0][0]+svm_matrix[1][1]+svm_matrix[0][1]+svm_matrix[1][0])
+
+print(classification_report(y_test, predictions))#DOMINIKA: Interpretation
+
+print('>>>   Accuracy of this model is : {0:.2%}'.format((svm_matrix[0][0]+svm_matrix[1][1])/(svm_matrix[0][0]+svm_matrix[1][1]+svm_matrix[0][1]+svm_matrix[1][0])))
+
+
+###GRID SEARCH FOR BETTER RESULTS########
+
+from sklearn.model_selection import GridSearchCV
+
+param_grid={'C':[0.1, 1, 10, 100, 1000], 'gamma':[1,0.1,0.01,0.001, 0.0001]}
+
+grid=GridSearchCV(SVC(), param_grid, refit=True, verbose=2)
+
+grid.fit(X_train_svm, y_train_svm)
+
+#Checking best parameters
+grid.best_params_
+
+grid_predictions=grid.predict(X_test)
+
+grid_matrix=confusion_matrix(y_test, grid_predictions)
+
+print(grid_matrix)
+
+print(classification_report(y_test, grid_predictions))
+
+(grid_matrix[0][0]+grid_matrix[1][1])/(grid_matrix[0][0]+grid_matrix[1][1]+grid_matrix[0][1]+grid_matrix[1][0])
+
+print('>>>   Accuracy of this model is : {0:.2%}'.format((grid_matrix[0][0]+grid_matrix[1][1])/(grid_matrix[0][0]+grid_matrix[1][1]+grid_matrix[0][1]+grid_matrix[1][0])))
