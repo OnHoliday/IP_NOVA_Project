@@ -19,3 +19,17 @@ TO DO LIST
 7.5 Do the logistic regression with and without LDA - Pedro
 8. Plot decision trees, - Lukas
 9. For random forest plot error graph and ROC courve - Konrad
+
+
+Report:
+Introductino: Lukas
+Data Descriptons: Konrad/Dominika
+Refrences - Pedro (all of us have to send input from where we have our knowledge)
+
+
+Introductino: 300
+Data Descriptons: 600
+Data preprocessing: 300
+Modling: 1000  -> everyone describe his own model -> why we chose that one, general idea behind model, 
+Results: 500 ->
+Conclusion: 300
