@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 
 ### 1. IMPORTING THE DATASET ##################################################
 
-dataset = pd.read_csv('Churn_Modelling.csv')
+dataset = pd.read_csv('/Users/fruechtnicht/NOVA/M.Sc_Data_Science_and_Advanced_Analytics/Semester1/IP/Churn_Modelling.csv')
 
 
 ### 2. HANDLING MISSING VALUES ################################################
@@ -29,7 +29,7 @@ X = dataset.iloc[:, :-1]
 
 # boxplot for outliers
 X.plot(kind='box', subplots=True, layout=(3, 4), sharex = False, sharey=False)
-plt().show()
+plt().show()   #########TypeError: 'module' object is not callable!!!
 # countplot for odd values 
 
 from pandas.plotting import scatter_matrix
@@ -63,6 +63,9 @@ X.info()
 from sklearn.model_selection import train_test_split
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 0)
 
+X_train_ind = X_train.index.values
+X_test_ind = X_test.index.values
+
 
 ## 6 FEATURE STANDARD SCALING #################################################
 #   6.1 Standardize features by removing the mean and scaling to unit variance
@@ -72,6 +75,10 @@ from sklearn.preprocessing import StandardScaler
 scaler = StandardScaler()
 X_train = scaler.fit_transform(X_train)
 X_test = scaler.transform(X_test)
+
+#to df
+X_train = pd.DataFrame(data=X_train, index = X_train_ind, columns=list(X.columns.values))
+X_test = pd.DataFrame(data=X_test, index = X_test_ind, columns=list(X.columns.values))
 
 #    6.1.1 without scaling dummy variables 
 
@@ -100,7 +107,7 @@ X_test = scaler.transform(X_test)
 ###########  DATA TRANSFORMATION AND VISULIZATION  ############################
 ###############################################################################
 
-### 1 BASIC DESCRIPTIVE STATISTICS ############################################
+### 1 BASIC DESCRIPTIVE STATISTICS ############################################ its all on the X is that right ??
 import matplotlib.pyplot as plt
 
 X.describe()
@@ -110,11 +117,12 @@ benchmark = max(dataset.groupby('Exited').size()[0], dataset.groupby('Exited').s
 
 print(pd.DataFrame(y_test).groupby('Exited').size())
 print('>>>   Percentage of clients who Exited is : {0:.2%}'.format(y.index.isin(list(y.index[(y == 1 )== True])).sum()/(y.index.isin(list(y.index[(y == 1 )== True] )).sum()+y.index.isin(list(y.index[(y == 1 )== False])).sum())))
-print(">>>   Base line accuracy of prediction is {0:.2%}".format(benchmark))        
+print(">>>   Base line accuracy of prediction is {0:.2%}".format(benchmark))
+        
 
 
 #### 2 HISTOGRAMS AND SCATTER PLOT #############################################
-# interesting columns for histograms3,5,6,7,8,11
+# interesting columns for histograms3,5,6,7,8,11 #not standardised data is used here ?!
 plt.hist(X['CreditScore'])
 plt.hist(X['Age']) # possible dyscretization opporutity to split into young 0-30, 30-40, 40+
 plt.hist(X['Tenure'])
@@ -122,9 +130,25 @@ plt.hist(X['Balance']) # split into those with 0, 0-100k, 100k-125k - 125k+
 plt.hist(X['NumOfProducts']) # mayby it should be encoded into 1, 2 and other as binnary data
 plt.hist(X['EstimatedSalary'])
 
-from pandas.plotting import scatter_matrix
-scatter_matrix(dataset) 
-plt.show()
+#with y_train?
+
+train_df = pd.concat([X_train, y_train], axis=1)
+       
+sns.pairplot(train_df, hue="Exited" , vars = [
+                                                'CreditScore'
+                                              , 'Gender'
+                                              , 'Age'
+#                                              , 'Tenure'
+#                                              , 'Balance'
+#                                              , 'NumOfProducts'
+#                                              , 'HasCrCard'
+#                                              , 'IsActiveMember'
+#                                              , 'EstimatedSalary'
+#                                              , 'France'
+#                                              , 'Germany'
+#                                              , 'Spain'
+                                              ]
+                                                , diag_kind = "kde")
 
 
 
@@ -134,9 +158,7 @@ pd.options.display.max_columns = 12
 pd.set_option('expand_frame_repr', True)
 pd.set_option('max_colwidth',30)
 #pd.reset_option('^display.', silent=True)
-X.corr()
-
-
+sns.heatmap(X.corr())
 
 ###########  MODELING DATASET  ################################################
 ###############################################################################
@@ -190,6 +212,7 @@ cm = confusion_matrix(y_test, y_pred)
 benchmark = max(benchmark, (cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1]))       
 print(cm)
 print('>>>   Accuracy of this model is : {0:.2%}'.format((cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1])))
+print('>>>   The investment return when this model is applied is:  €{:0,.2f}'.format(cm[0][0]*0 + cm[1][1]*200 + cm[1][0]*(-140) + cm[0][1]*(-450)).replace('€-','-€'))
 print(">>>   Best accuracy of prediction was {0:.2%}".format(benchmark)) 
 print(">>>   Current best prediction is {0:.2%}".format(benchmark))        
   
@@ -225,6 +248,7 @@ cm = confusion_matrix(y_test, y_pred)
 benchmark = max(benchmark, (cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1]))       
 print(cm)
 print('>>>   Accuracy of this model is : {0:.2%}'.format((cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1])))
+print('>>>   The investment return when this model is applied is:  €{:0,.2f}'.format(cm[0][0]*0 + cm[1][1]*200 + cm[1][0]*(-140) + cm[0][1]*(-450)).replace('€-','-€'))
 print(">>>   Best accuracy of prediction was {0:.2%}".format(benchmark)) 
 print(">>>   Current best prediction is {0:.2%}".format(benchmark))        
  
