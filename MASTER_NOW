@@ -49,7 +49,7 @@ sns.countplot('Gender', data=X)
 
 # interesting columns for histograms
 plt.hist(X['CreditScore'])
-plt.hist(X['Age'])
+plt.hist(X['Age'])#log transformation on Age
 plt.hist(X['Tenure'])
 plt.hist(X['Balance'])
 plt.hist(X['NumOfProducts'])
@@ -115,7 +115,7 @@ X_test = pd.DataFrame(data=X_test, index = X_test_ind, columns=list(X.columns.va
 
 
 
-###########  DATA TRANSFORMATION AND VISULIZATION  ############################
+###########2  DATA TRANSFORMATION AND VISULIZATION  ###########################
 ###############################################################################
 
 ### 1 BASIC DESCRIPTIVE STATISTICS ############################################ its all on the X is that right ??
