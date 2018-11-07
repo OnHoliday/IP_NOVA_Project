@@ -25,11 +25,20 @@ dataset.isnull().sum(axis=0)
 y = dataset.iloc[:, 13]
 X = dataset.iloc[:, :-1]
 
-### 3. HANDLING ERRORS  ######################################################
+### 3. FEATURE SELECTION ######################################################
 
-# boxplot for outliers
-X.plot(kind='box', subplots=True, layout=(3, 4), sharex = False, sharey=False)
-plt().show()   #########TypeError: 'module' object is not callable!!!
+X.columns.values
+X.drop(['Surname'], axis=1, inplace=True)
+X.drop(['CustomerId'], axis=1, inplace=True)
+X.drop(['RowNumber'], axis=1, inplace=True)
+
+### 4. HANDLING ERRORS  ######################################################
+
+# boxplots for outliers
+plt.style.use('ggplot')
+X.plot(kind='box', subplots=True, layout=(3, 3), sharex = False, sharey=False, figsize=(20,10))
+plt.suptitle('Column Boxplots', size=25, color='orange', fontweight='bold')
+
 # countplot for odd values 
 
 from pandas.plotting import scatter_matrix
@@ -38,15 +47,17 @@ plt.show()
 
 sns.countplot('Gender', data=X)
 
-### 3. FEATURE SELECTION ######################################################
+# interesting columns for histograms
+plt.hist(X['CreditScore'])
+plt.hist(X['Age'])
+plt.hist(X['Tenure'])
+plt.hist(X['Balance'])
+plt.hist(X['NumOfProducts'])
+plt.hist(X['EstimatedSalary'])
 
-X.columns.values
-X.drop(['Surname'], axis=1, inplace=True)
-X.drop(['CustomerId'], axis=1, inplace=True)
-X.drop(['RowNumber'], axis=1, inplace=True)
 
 
-### 4. ENCODING CATEGORICAL VARIABLES #########################################
+### 5. ENCODING CATEGORICAL VARIABLES #########################################
 
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 labelEncoder2 = LabelEncoder() 
@@ -121,17 +132,9 @@ print(">>>   Base line accuracy of prediction is {0:.2%}".format(benchmark))
         
 
 
-#### 2 HISTOGRAMS AND SCATTER PLOT #############################################
-# interesting columns for histograms3,5,6,7,8,11 #not standardised data is used here ?!
-plt.hist(X['CreditScore'])
-plt.hist(X['Age']) # possible dyscretization opporutity to split into young 0-30, 30-40, 40+
-plt.hist(X['Tenure'])
-plt.hist(X['Balance']) # split into those with 0, 0-100k, 100k-125k - 125k+
-plt.hist(X['NumOfProducts']) # mayby it should be encoded into 1, 2 and other as binnary data
-plt.hist(X['EstimatedSalary'])
+#### EXPLORATORY DATA VISUALIZATION#############################################
 
-#with y_train?
-
+#Pairplots
 train_df = pd.concat([X_train, y_train], axis=1)
        
 sns.pairplot(train_df, hue="Exited" , vars = [
@@ -149,7 +152,30 @@ sns.pairplot(train_df, hue="Exited" , vars = [
 #                                              , 'Spain'
                                               ]
                                                 , diag_kind = "kde")
+                                                
+#Active vs inactive members exiting
+fig, ax =plt.subplots(1,2, sharey=True, sharex=True)
+plt.suptitle('Number of Exits among Active and Inactive Members', size=13, color='grey', fontweight='bold')
+sns.countplot(dataset[dataset['IsActiveMember']==1]['Exited'], ax=ax[0])
+sns.countplot(dataset[dataset['IsActiveMember']==0]['Exited'], ax=ax[1])
+ax[0].set_xlabel('Active Members', color='green')
+ax[0].set_ylabel(' ')
+ax[1].set_xlabel('Inactive Members', color='red')
+ax[1].set_ylabel(' ')
+#add labels %
 
+#Exits per country
+fig, ax =plt.subplots(1,3, sharey=True, sharex=True)
+plt.suptitle('Number of Exits per country', size=13, color='grey', fontweight='bold')
+sns.countplot(dataset[dataset['Geography']=='Spain']['Exited'], ax=ax[0])
+sns.countplot(dataset[dataset['Geography']=='France']['Exited'], ax=ax[1])
+sns.countplot(dataset[dataset['Geography']=='Germany']['Exited'], ax=ax[2])
+ax[0].set_xlabel('Spain')
+ax[0].set_ylabel(' ')
+ax[1].set_xlabel('France')
+ax[1].set_ylabel(' ')
+ax[2].set_xlabel('Germany')
+ax[2].set_ylabel(' ')
 
 
 ### 3 CORRELATION #############################################################
