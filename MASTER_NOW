@@ -49,13 +49,14 @@ sns.countplot('Gender', data=X)
 
 # interesting columns for histograms
 plt.hist(X['CreditScore'])
-plt.hist(X['Age'])#log transformation on Age
+plt.hist(X['Age'])
 plt.hist(X['Tenure'])
 plt.hist(X['Balance'])
 plt.hist(X['NumOfProducts'])
 plt.hist(X['EstimatedSalary'])
 
-
+#log transformation on Age
+X['Age']=np.log(X['Age'])
 
 ### 5. ENCODING CATEGORICAL VARIABLES #########################################
 
