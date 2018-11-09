@@ -34,26 +34,37 @@ X.drop(['RowNumber'], axis=1, inplace=True)
 
 ### 4. HANDLING ERRORS  ######################################################
 
+
+#excluding binary variables for boxplots
+X_boxplot=X[[i for i in list(X.columns) if i not in ['HasCrCard', 'IsActiveMember']]]
+
 # boxplots for outliers
 plt.style.use('ggplot')
-X.plot(kind='box', subplots=True, layout=(3, 3), sharex = False, sharey=False, figsize=(20,10))
+X_boxplot.plot(kind='box', subplots=True, layout=(2, 3), sharex = False, sharey=False, figsize=(20,10))
 plt.suptitle('Column Boxplots', size=25, color='orange', fontweight='bold')
-
-# countplot for odd values 
 
 from pandas.plotting import scatter_matrix
 scatter_matrix(dataset)
 plt.show()
 
-sns.countplot('Gender', data=X)
+# histograms for columns of interest
+sns.set_style('darkgrid')
+fig = plt.figure(figsize=(20,10))
+ax1 = fig.add_subplot(231)
+ax2 = fig.add_subplot(232)
+ax3 = fig.add_subplot(233)
+ax4 = fig.add_subplot(234)
+ax5 = fig.add_subplot(235)
+ax6 = fig.add_subplot(236)
 
-# interesting columns for histograms
-plt.hist(X['CreditScore'])
-plt.hist(X['Age'])
-plt.hist(X['Tenure'])
-plt.hist(X['Balance'])
-plt.hist(X['NumOfProducts'])
-plt.hist(X['EstimatedSalary'])
+sns.distplot(X['CreditScore'], kde=False, color='red', ax=ax1)
+sns.distplot(X['Age'], kde=False, color='red', ax=ax2)
+sns.distplot(X['Tenure'], kde=False, color='red', ax=ax3)
+sns.distplot(X['Balance'], kde=False, color='red', ax=ax4)
+sns.distplot(X['NumOfProducts'], kde=False, color='red', ax=ax5)
+sns.distplot(X['EstimatedSalary'], kde=False, color='red', ax=ax6)
+
+plt.suptitle('Column Histograms', size=25, color='grey', fontweight='bold')
 
 #log transformation on Age
 X['Age']=np.log(X['Age'])
