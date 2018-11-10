@@ -31,5 +31,6 @@ Introductino: 300
 Data Descriptons: 600
 Data preprocessing: 300
 Modling: 1000  -> everyone describe his own model -> why we chose that one, general idea behind model, 
-Results: 500 ->
+Model selection: 400 -> explain k fold crossvalidation + model graph
+Selected model Tuning: 100 explain what grid search does
 Conclusion: 300
