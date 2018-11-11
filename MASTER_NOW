@@ -105,6 +105,7 @@ X=pd.concat([X, degree_dummies], axis=1)
 
 X = X.apply(pd.to_numeric)
 X.info()
+
 ### 5. SPLITTING THE DATASET INTO TRAINING SET AND TEST SET ###################
 
 from sklearn.model_selection import train_test_split
@@ -220,7 +221,7 @@ pd.options.display.max_columns = 12
 pd.set_option('expand_frame_repr', True)
 pd.set_option('max_colwidth',30)
 #pd.reset_option('^display.', silent=True)
-sns.heatmap(X.corr(), annot=True)
+sns.heatmap(X.corr(), vmin=-1, vmax=1, cmap = "RdBu_r", center=0 ,annot=True, fmt=".0%")
 
 ###########  MODELING DATASET  ################################################
 ###############################################################################
@@ -367,14 +368,14 @@ X_train_tre = X_train.copy()
 X_test_tre = X_test.copy()
 y_train_tre = y_train.copy()
 
-from sklearn.tree import DecisionTreeClassifier       #importing the tree
-dtree = DecisionTreeClassifier(random_state = 0)                      #setting up a tree
-dtree.fit(X_train_tre,y_train_tre)                            #using the train data to train the tree
-y_pred = dtree.predict(X_test_tre)                   #making predicitons on the test data
-from sklearn.metrics import classification_report,confusion_matrix#importing reporting methods
+from sklearn.tree import DecisionTreeClassifier      
+dtree = DecisionTreeClassifier(random_state = 0)                      
+dtree.fit(X_train_tre,y_train_tre)                            
+y_pred = dtree.predict(X_test_tre)                   
+from sklearn.metrics import classification_report,confusion_matrix
 print('Descision Tree')
 print(classification_report(y_test, y_pred))
-cm = confusion_matrix(y_test, y_pred)          #printing the confusion matrix 
+cm = confusion_matrix(y_test, y_pred)          
 print(cm)
 tn, fp, fn, tp = cm.ravel()
 sen = tp/(tp + fn)
@@ -393,12 +394,6 @@ print('>>>   Accuracy of this model is : {0:.2%}'.format((cm[0][0] + cm[1][1] )/
 print('>>>   The investment return when this model is applied is:  €{:0,.2f}'.format(cm[0][0]*0 + cm[1][1]*500 + cm[1][0]*(-140) + cm[0][1]*(-450)).replace('€-','-€'))
 print(">>>   Best accuracy of prediction was {0:.2%}".format(benchmark)) 
 print(">>>   Current best prediction is {0:.2%}".format(benchmark))        
-
-
-### in my opinion we should try to focus on predicting true positives and min the type II error -> amining for a sensitivity, hence applying the random forest
-## is 1 = potivie and 0 negative ?
-
-#problem it changes everytime i dont know why 
 
 
 #### random forest ####
@@ -408,14 +403,33 @@ X_train_rf = X_train.copy()
 X_test_rf = X_test.copy()
 y_train_rf = y_train.copy()
 
-from sklearn.ensemble import RandomForestClassifier   #omporting the RandomForestClassifier
-rfc = RandomForestClassifier(n_estimators=300, random_state=0)        #setting up a RFC with 300 estimators (number of randomly distributed trees classifing the object; default is 100)
-rfc.fit(X_train_rf,y_train_rf)                              #using the train data to train the rfc
-y_pred = rfc.predict(X_test_rf)                     #making predicitons on the test data
-from sklearn.metrics import classification_report,confusion_matrix#importing reporting methods
+from sklearn.ensemble import RandomForestClassifier   
+rfc = RandomForestClassifier(n_estimators=300, random_state=0)        
+rfc.fit(X_train_rf,y_train_rf)                              
+y_pred = rfc.predict(X_test_rf)                     
+
+### implementing the ROI score based on the project specifities####
+
+from sklearn.cross_validation import  cross_val_score
+from sklearn.metrics import confusion_matrix
+
+def ROI (estimator, x, y):
+    
+    yPred = estimator.predict(x)
+    cm = confusion_matrix(y, yPred)
+    ROI = cm[0][0]*0 + cm[1][1]*500 + cm[1][0]*(-140) + cm[0][1]*(-450)
+    
+    return ROI
+
+###performing crossvalidation with ROI and accuracy
+
+rfc_ROI  = cross_val_score(rfc, X_train_rf, y_train_rf ,scoring = ROI, cv=12, n_jobs = -2).mean()
+rfc_Acc  = cross_val_score(rfc, X_train_rf, y_train_rf ,scoring = 'accuracy', cv=12, n_jobs = -2).mean()
+
+from sklearn.metrics import classification_report,confusion_matrix
 print('Random Forest')
 print(classification_report(y_test, y_pred))
-cm = confusion_matrix(y_test, y_pred)          #printing the confusion matrix 
+cm = confusion_matrix(y_test, y_pred)          
 print(cm)
 tn, fp, fn, tp = cm.ravel()
 sen = tp/(tp + fn)
@@ -433,92 +447,15 @@ print(cm)
 print('>>>   Accuracy of this model is : {0:.2%}'.format((cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1])))
 print('>>>   The investment return when this model is applied is:  €{:0,.2f}'.format(cm[0][0]*0 + cm[1][1]*500 + cm[1][0]*(-140) + cm[0][1]*(-450)).replace('€-','-€'))
 print(">>>   Best accuracy of prediction was {0:.2%}".format(benchmark)) 
-print(">>>   Current best prediction is {0:.2%}".format(benchmark))        
+print(">>>   Current best prediction is {0:.2%}".format(benchmark))    
 
-###turns out that type II error increases, the model is wore for us..
+####feature importance visualisation
 
-
-
-# My tree
-
-X_tre = X.copy()
-X_train_tre = X_train.copy()
-X_test_tre = X_test.copy()
-y_train_tre = y_train.copy()
-
-# Fitting Decision Tree Classification to the Training set
-from sklearn.tree import DecisionTreeClassifier
-dt_entr = DecisionTreeClassifier(criterion = 'entropy')
-dt_entr.fit(X_train_tre, y_train_tre)
-
-# Predicting the Test set results
-y_pred = dt_entr.predict(X_test_tre)
-
-# Making the Confusion Matrix
-from sklearn.metrics import classification_report,confusion_matrix#importing reporting methods
-cm = confusion_matrix(y_test, y_pred)
-
-print(classification_report(y_test, y_pred))         #printing the confusion matrix 
-print(cm)
-tn, fp, fn, tp = cm.ravel()
-sen = tp/(tp + fn)
-print('True positive  = ', tp)
-print('False positive = ', fp)
-print('False negative = ', fn)
-print('True negative  = ', tn)
-print('Sensitivity  = ', sen)
-
-cm = confusion_matrix(y_test, y_pred)
-(cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1])
-
-benchmark = max(benchmark, (cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1]))       
-print(cm)
-print('>>>   Accuracy of this model is : {0:.2%}'.format((cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1])))
-print('>>>   The investment return when this model is applied is:  €{:0,.2f}'.format(cm[0][0]*0 + cm[1][1]*500 + cm[1][0]*(-140) + cm[0][1]*(-450)).replace('€-','-€'))
-print(">>>   Best accuracy of prediction was {0:.2%}".format(benchmark)) 
-print(">>>   Current best prediction is {0:.2%}".format(benchmark))        
-
-
-### My forrest
-
-X_rf = X.copy()
-X_train_rf = X_train.copy()
-X_test_rf = X_test.copy()
-y_train_rf = y_train.copy()
-
-
-# Fitting Random Forest Classification to the Training set
-from sklearn.ensemble import RandomForestClassifier
-rf_entr = RandomForestClassifier(n_estimators = 300, criterion = 'entropy', random_state = 0)
-rf_entr.fit(X_train_rf, y_train_rf)
-
-# Predicting the Test set results
-y_pred = rf_entr.predict(X_test_rf)
-
-# Making the Confusion Matrix
-from sklearn.metrics import confusion_matrix
-cm = confusion_matrix(y_test, y_pred)
-
-print(classification_report(y_test, y_pred))
-cm = confusion_matrix(y_test, y_pred)          #printing the confusion matrix 
-print(cm)
-tn, fp, fn, tp = cm.ravel()
-sen = tp/(tp + fn)
-print('True positive  = ', tp)
-print('False positive = ', fp)
-print('False negative = ', fn)
-print('True negative  = ', tn)
-print('Sensitivity  = ', sen)
-
-cm = confusion_matrix(y_test, y_pred)
-(cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1])
-
-benchmark = max(benchmark, (cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1]))       
-print(cm)
-print('>>>   Accuracy of this model is : {0:.2%}'.format((cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1])))
-print('>>>   The investment return when this model is applied is:  €{:0,.2f}'.format(cm[0][0]*0 + cm[1][1]*500 + cm[1][0]*(-140) + cm[0][1]*(-450)).replace('€-','-€'))
-print(">>>   Best accuracy of prediction was {0:.2%}".format(benchmark)) 
-print(">>>   Current best prediction is {0:.2%}".format(benchmark))        
+import pandas as pd
+feature_importances_rfc = pd.DataFrame(rfc.feature_importances_,
+                                   index = X_train_rf.columns,
+                                   columns=['importance']).sort_values('importance', ascending=False)
+sns.barplot(x=feature_importances_rfc.index.values, y="importance", data=feature_importances_rfc)    
 
 #############################SUPPORT VECTOR MACHINES###########################
 
@@ -618,9 +555,7 @@ print(">>>   Current best prediction is {0:.2%}".format(benchmark))
 
 ############################### NAive BAis
 
-import sklearn
 from sklearn.naive_bayes import BernoulliNB
-from sklearn import metrics
 from sklearn.metrics import accuracy_score
 
 
@@ -710,6 +645,14 @@ cm = confusion_matrix(y_test, y_pred)
 
 benchmark = max(benchmark, (cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1]))       
 print(cm)
+tn, fp, fn, tp = cm.ravel()
+sen = tp/(tp + fn)
+print('True positive  = ', tp)
+print('False positive = ', fp)
+print('False negative = ', fn)
+print('True negative  = ', tn)
+print('Sensitivity  = ', sen)
+
 print('>>>   Accuracy of this model is : {0:.2%}'.format((cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1])))
 print('>>>   The investment return when this model is applied is:  €{:0,.2f}'.format(cm[0][0]*0 + cm[1][1]*500 + cm[1][0]*(-140) + cm[0][1]*(-450)).replace('€-','-€'))
 print(">>>   Best accuracy of prediction was {0:.2%}".format(benchmark)) 
