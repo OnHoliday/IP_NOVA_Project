@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 
 ### 1. IMPORTING THE DATASET ##################################################
 
-dataset = pd.read_csv('/Users/fruechtnicht/NOVA/M.Sc_Data_Science_and_Advanced_Analytics/Semester1/IP/Churn_Modelling.csv')
+dataset = pd.read_csv('Churn_Modelling.csv')
 
 
 ### 2. HANDLING MISSING VALUES ################################################
@@ -65,6 +65,30 @@ sns.distplot(X['NumOfProducts'], kde=False, color='red', ax=ax5)
 sns.distplot(X['EstimatedSalary'], kde=False, color='red', ax=ax6)
 
 plt.suptitle('Column Histograms', size=25, color='grey', fontweight='bold')
+
+
+sns.factorplot('Geography','Exited',hue='Gender',data=dataset)
+plt.show()
+
+sns.FacetGrid(dataset, hue="Exited", size=5).map(sns.kdeplot, "Balance").add_legend()
+plt.show()
+
+f,ax=plt.subplots(1,2,figsize=(18,8))
+sns.violinplot("Geography","Age",   hue="Exited", data=dataset,split=True,ax=ax[0])
+ax[0].set_title('Geography and Age vs Exited')
+ax[0].set_yticks(range(0,110,10))
+sns.factorplot('Geography','Exited',hue='Gender', data=dataset,split=True,ax=ax[1])
+ax[1].set_title('Geography and Gender vs Exited') 
+ax[1].set_yticks(range(0,1,3))
+plt.show()
+
+
+tab = pd.crosstab(dataset['Geography'], dataset['Exited'])
+print(tab)
+dummy = tab.div(tab.sum(1).astype(float), axis=0).plot(kind="bar", stacked=True)
+dummy = plt.xlabel('Geography')
+dummy = plt.ylabel('Percentage')
+
 
 #log transformation on Age
 X['Age']=np.log(X['Age'])
@@ -151,10 +175,10 @@ train_df = pd.concat([X_train, y_train], axis=1)
        
 sns.pairplot(train_df, hue="Exited" , vars = [
                                                 'CreditScore'
-                                              , 'Gender'
+#                                              , 'Gender'
                                               , 'Age'
 #                                              , 'Tenure'
-#                                              , 'Balance'
+                                              , 'Balance'
 #                                              , 'NumOfProducts'
 #                                              , 'HasCrCard'
 #                                              , 'IsActiveMember'
@@ -196,7 +220,7 @@ pd.options.display.max_columns = 12
 pd.set_option('expand_frame_repr', True)
 pd.set_option('max_colwidth',30)
 #pd.reset_option('^display.', silent=True)
-sns.heatmap(X.corr())
+sns.heatmap(X.corr(), annot=True)
 
 ###########  MODELING DATASET  ################################################
 ###############################################################################
@@ -238,7 +262,7 @@ plt.hist(y_pred)
 
 # Assiging predicted values into decision
 for q in range(len(y_pred)):
-    if y_pred[q]<0.5: #(max(y_pred) - min(y_pred))/2:
+    if y_pred[q]<(max(y_pred) - min(y_pred))/2:
         y_pred[q]=0
     else: y_pred[q] = 1
     
@@ -250,12 +274,39 @@ cm = confusion_matrix(y_test, y_pred)
 benchmark = max(benchmark, (cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1]))       
 print(cm)
 print('>>>   Accuracy of this model is : {0:.2%}'.format((cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1])))
-print('>>>   The investment return when this model is applied is:  €{:0,.2f}'.format(cm[0][0]*0 + cm[1][1]*200 + cm[1][0]*(-140) + cm[0][1]*(-450)).replace('€-','-€'))
+print('>>>   The investment return when this model is applied is:  €{:0,.2f}'.format(cm[0][0]*0 + cm[1][1]*500 + cm[1][0]*(-140) + cm[0][1]*(-450)).replace('€-','-€'))
 print(">>>   Best accuracy of prediction was {0:.2%}".format(benchmark)) 
 print(">>>   Current best prediction is {0:.2%}".format(benchmark))        
   
 
-##### 2 PCA & lOGISTIC REGRESSION #############################################
+##### 2 lOGISTIC REGRESSION #############################################
+
+X_pca = X.copy()
+X_train_pca = X_train.copy()
+X_test_pca = X_test.copy()
+y_train_pca = y_train.copy()
+
+
+### 5 Fitting Logistic Regression to the Training set
+from sklearn.linear_model import LogisticRegression
+LR = LogisticRegression(random_state=10)
+LR.fit(X_train_pca, y_train_pca)
+
+# Predict the Test set results
+y_pred = LR.predict(X_test_pca)
+
+# Confusion matrix
+cm = confusion_matrix(y_test, y_pred)
+(cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1])
+
+benchmark = max(benchmark, (cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1]))       
+print(cm)
+print('>>>   Accuracy of this model is : {0:.2%}'.format((cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1])))
+print('>>>   The investment return when this model is applied is:  €{:0,.2f}'.format(cm[0][0]*0 + cm[1][1]*500 + cm[1][0]*(-140) + cm[0][1]*(-450)).replace('€-','-€'))
+print(">>>   Best accuracy of prediction was {0:.2%}".format(benchmark)) 
+print(">>>   Current best prediction is {0:.2%}".format(benchmark))        
+  
+##### 2 lOGISTIC REGRESSION WITH PCA #############################################
 
 X_pca = X.copy()
 X_train_pca = X_train.copy()
@@ -272,61 +323,40 @@ explained_variance = pca.explained_variance_ratio_
 
 ### 5 Fitting Logistic Regression to the Training set
 from sklearn.linear_model import LogisticRegression
-classifier = LogisticRegression(random_state=10)
-classifier.fit(X_train_pca, y_train_pca)
+LR_PCA = LogisticRegression(random_state=10)
+LR_PCA.fit(X_train_pca, y_train_pca)
 
 # Predict the Test set results
-y_pred = classifier.predict(X_test_pca)
+y_pred = LR_PCA.predict(X_test_pca)
 
 # Confusion matrix
-from sklearn.metrics import confusion_matrix
 cm = confusion_matrix(y_test, y_pred)
 (cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1])
 
 benchmark = max(benchmark, (cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1]))       
 print(cm)
 print('>>>   Accuracy of this model is : {0:.2%}'.format((cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1])))
-print('>>>   The investment return when this model is applied is:  €{:0,.2f}'.format(cm[0][0]*0 + cm[1][1]*200 + cm[1][0]*(-140) + cm[0][1]*(-450)).replace('€-','-€'))
+print('>>>   The investment return when this model is applied is:  €{:0,.2f}'.format(cm[0][0]*0 + cm[1][1]*500 + cm[1][0]*(-140) + cm[0][1]*(-450)).replace('€-','-€'))
 print(">>>   Best accuracy of prediction was {0:.2%}".format(benchmark)) 
 print(">>>   Current best prediction is {0:.2%}".format(benchmark))        
- 
 
-# Visualising the Training set results
-#from matplotlib.colors import ListedColormap
-#
-#X_set, y_set = X_train_pca, y_train_pca
-#X1, X2 = np.meshgrid(np.arange(start = X_set[:, 0].min() - 1, stop = X_set[:, 0].max() + 1, step = 0.01),
-#                     np.arange(start = X_set[:, 1].min() - 1, stop = X_set[:, 1].max() + 1, step = 0.01))
-#plt.contourf(X1, X2, classifier.predict(np.array([X1.ravel(), X2.ravel()]).T).reshape(X1.shape),
-#             alpha = 0.75, cmap = ListedColormap(('red', 'green', 'blue')))
-#plt.xlim(X1.min(), X1.max())
-#plt.ylim(X2.min(), X2.max())
-#for i, j in enumerate(np.unique(y_set)):
-#    plt.scatter(X_set[y_set == j, 0], X_set[y_set == j, 1],
-#                c = ListedColormap(('red', 'green', 'blue'))(i), label = j)
-#plt.title('Logistic Regression (Training set)')
-#plt.xlabel('PC1')
-#plt.ylabel('PC2')
-#plt.legend()
-#plt.show()
-#
-## Visualising the Test set results
-#from matplotlib.colors import ListedColormap
-#X_set, y_set = X_test_pca, y_test
-#X1, X2 = np.meshgrid(np.arange(start = X_set[:, 0].min() - 1, stop = X_set[:, 0].max() + 1, step = 0.01),
-#                     np.arange(start = X_set[:, 1].min() - 1, stop = X_set[:, 1].max() + 1, step = 0.01))
-#plt.contourf(X1, X2, classifier.predict(np.array([X1.ravel(), X2.ravel()]).T).reshape(X1.shape),
-#             alpha = 0.75, cmap = ListedColormap(('red', 'green', 'blue')))
-#plt.xlim(X1.min(), X1.max())
-#plt.ylim(X2.min(), X2.max())
-#for i, j in enumerate(np.unique(y_set)):
-#    plt.scatter(X_set[y_set == j, 0], X_set[y_set == j, 1],
-#                c = ListedColormap(('red', 'green', 'blue'))(i), label = j)
-#plt.title('Logistic Regression (Test set)')
-#plt.xlabel('PC1')
-#plt.ylabel('PC2')
-#plt.legend()
-#plt.show()
+# Visualising the Test set results
+from matplotlib.colors import ListedColormap
+X_set, y_set = X_test_pca, y_test
+X1, X2 = np.meshgrid(np.arange(start = X_set[:, 0].min() - 1, stop = X_set[:, 0].max() + 1, step = 0.01),
+                     np.arange(start = X_set[:, 1].min() - 1, stop = X_set[:, 1].max() + 1, step = 0.01))
+plt.contourf(X1, X2, LR_PCA.predict(np.array([X1.ravel(), X2.ravel()]).T).reshape(X1.shape),
+             alpha = 0.75, cmap = ListedColormap(('red', 'green', 'blue')))
+plt.xlim(X1.min(), X1.max())
+plt.ylim(X2.min(), X2.max())
+for i, j in enumerate(np.unique(y_set)):
+    plt.scatter(X_set[y_set == j, 0], X_set[y_set == j, 1],
+                c = ListedColormap(('red', 'green', 'blue'))(i), label = j)
+plt.title('Logistic Regression (Test set)')
+plt.xlabel('PC1')
+plt.ylabel('PC2')
+plt.legend()
+plt.show()
 
 
 
@@ -353,6 +383,18 @@ print('False positive = ', fp)
 print('False negative = ', fn)
 print('True negative  = ', tn)
 print('Sensitivity  = ', sen)
+
+cm = confusion_matrix(y_test, y_pred)
+(cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1])
+
+benchmark = max(benchmark, (cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1]))       
+print(cm)
+print('>>>   Accuracy of this model is : {0:.2%}'.format((cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1])))
+print('>>>   The investment return when this model is applied is:  €{:0,.2f}'.format(cm[0][0]*0 + cm[1][1]*500 + cm[1][0]*(-140) + cm[0][1]*(-450)).replace('€-','-€'))
+print(">>>   Best accuracy of prediction was {0:.2%}".format(benchmark)) 
+print(">>>   Current best prediction is {0:.2%}".format(benchmark))        
+
+
 ### in my opinion we should try to focus on predicting true positives and min the type II error -> amining for a sensitivity, hence applying the random forest
 ## is 1 = potivie and 0 negative ?
 
@@ -382,6 +424,17 @@ print('False positive = ', fp)
 print('False negative = ', fn)
 print('True negative  = ', tn)
 print('Sensitivity  = ', sen)
+
+cm = confusion_matrix(y_test, y_pred)
+(cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1])
+
+benchmark = max(benchmark, (cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1]))       
+print(cm)
+print('>>>   Accuracy of this model is : {0:.2%}'.format((cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1])))
+print('>>>   The investment return when this model is applied is:  €{:0,.2f}'.format(cm[0][0]*0 + cm[1][1]*500 + cm[1][0]*(-140) + cm[0][1]*(-450)).replace('€-','-€'))
+print(">>>   Best accuracy of prediction was {0:.2%}".format(benchmark)) 
+print(">>>   Current best prediction is {0:.2%}".format(benchmark))        
+
 ###turns out that type II error increases, the model is wore for us..
 
 
@@ -395,11 +448,11 @@ y_train_tre = y_train.copy()
 
 # Fitting Decision Tree Classification to the Training set
 from sklearn.tree import DecisionTreeClassifier
-classifier = DecisionTreeClassifier(criterion = 'entropy')
-classifier.fit(X_train_tre, y_train_tre)
+dt_entr = DecisionTreeClassifier(criterion = 'entropy')
+dt_entr.fit(X_train_tre, y_train_tre)
 
 # Predicting the Test set results
-y_pred = classifier.predict(X_test_tre)
+y_pred = dt_entr.predict(X_test_tre)
 
 # Making the Confusion Matrix
 from sklearn.metrics import classification_report,confusion_matrix#importing reporting methods
@@ -415,6 +468,17 @@ print('False negative = ', fn)
 print('True negative  = ', tn)
 print('Sensitivity  = ', sen)
 
+cm = confusion_matrix(y_test, y_pred)
+(cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1])
+
+benchmark = max(benchmark, (cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1]))       
+print(cm)
+print('>>>   Accuracy of this model is : {0:.2%}'.format((cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1])))
+print('>>>   The investment return when this model is applied is:  €{:0,.2f}'.format(cm[0][0]*0 + cm[1][1]*500 + cm[1][0]*(-140) + cm[0][1]*(-450)).replace('€-','-€'))
+print(">>>   Best accuracy of prediction was {0:.2%}".format(benchmark)) 
+print(">>>   Current best prediction is {0:.2%}".format(benchmark))        
+
+
 ### My forrest
 
 X_rf = X.copy()
@@ -425,11 +489,11 @@ y_train_rf = y_train.copy()
 
 # Fitting Random Forest Classification to the Training set
 from sklearn.ensemble import RandomForestClassifier
-classifier = RandomForestClassifier(n_estimators = 300, criterion = 'entropy', random_state = 0)
-classifier.fit(X_train_rf, y_train_rf)
+rf_entr = RandomForestClassifier(n_estimators = 300, criterion = 'entropy', random_state = 0)
+rf_entr.fit(X_train_rf, y_train_rf)
 
 # Predicting the Test set results
-y_pred = classifier.predict(X_test_rf)
+y_pred = rf_entr.predict(X_test_rf)
 
 # Making the Confusion Matrix
 from sklearn.metrics import confusion_matrix
@@ -446,6 +510,15 @@ print('False negative = ', fn)
 print('True negative  = ', tn)
 print('Sensitivity  = ', sen)
 
+cm = confusion_matrix(y_test, y_pred)
+(cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1])
+
+benchmark = max(benchmark, (cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1]))       
+print(cm)
+print('>>>   Accuracy of this model is : {0:.2%}'.format((cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1])))
+print('>>>   The investment return when this model is applied is:  €{:0,.2f}'.format(cm[0][0]*0 + cm[1][1]*500 + cm[1][0]*(-140) + cm[0][1]*(-450)).replace('€-','-€'))
+print(">>>   Best accuracy of prediction was {0:.2%}".format(benchmark)) 
+print(">>>   Current best prediction is {0:.2%}".format(benchmark))        
 
 #############################SUPPORT VECTOR MACHINES###########################
 
@@ -486,6 +559,16 @@ print('False negative = ', fn)
 print('True negative  = ', tn)
 print('Sensitivity  = ', sen)
 
+cm = confusion_matrix(y_test, y_pred)
+(cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1])
+
+benchmark = max(benchmark, (cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1]))       
+print(cm)
+print('>>>   Accuracy of this model is : {0:.2%}'.format((cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1])))
+print('>>>   The investment return when this model is applied is:  €{:0,.2f}'.format(cm[0][0]*0 + cm[1][1]*500 + cm[1][0]*(-140) + cm[0][1]*(-450)).replace('€-','-€'))
+print(">>>   Best accuracy of prediction was {0:.2%}".format(benchmark)) 
+print(">>>   Current best prediction is {0:.2%}".format(benchmark))        
+
 
 ###GRID SEARCH FOR BETTER RESULTS########
 
@@ -522,15 +605,21 @@ print('False positive = ', fp)
 print('False negative = ', fn)
 print('True negative  = ', tn)
 print('Sensitivity  = ', sen)
+cm = confusion_matrix(y_test, y_pred)
+(cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1])
+
+benchmark = max(benchmark, (cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1]))       
+print(cm)
+print('>>>   Accuracy of this model is : {0:.2%}'.format((cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1])))
+print('>>>   The investment return when this model is applied is:  €{:0,.2f}'.format(cm[0][0]*0 + cm[1][1]*500 + cm[1][0]*(-140) + cm[0][1]*(-450)).replace('€-','-€'))
+print(">>>   Best accuracy of prediction was {0:.2%}".format(benchmark)) 
+print(">>>   Current best prediction is {0:.2%}".format(benchmark))        
+
 
 ############################### NAive BAis
 
 import sklearn
 from sklearn.naive_bayes import BernoulliNB
-from sklearn.naive_bayes import GaussianNB
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.model_selection import train_test_split
-
 from sklearn import metrics
 from sklearn.metrics import accuracy_score
 
@@ -544,27 +633,6 @@ predicted_y = BernNB.predict(X_test)
 expected_y = y_test
 y_pred = BernNB.predict(X_test)
 print (accuracy_score(expected_y, predicted_y))
-
-#
-#
-##good for freauency counts(Example: word count)
-#MultiNB = MultinomialNB()
-#MultiNB.fit (X_train, y_train)
-#print (MultiNB)
-#
-
-#print (accuracy_score(expected_y, predicted_y))
-#
-#
-#
-#
-##good for normally distributed features
-#GausNB = GaussianNB()
-#GausNB.fit(X_train, y_train)
-#print (GausNB)
-#
-#predicted_y = GausNB.predict(X_test)
-#print (accuracy_sc0e(expected_y, predicted_y))
 
 
 from sklearn.metrics import classification_report,confusion_matrix#importing reporting methods
@@ -587,9 +655,9 @@ print(">>>   Current best prediction is {0:.2%}".format(benchmark))
 #### 3 SINGLE LAYER NEURAL NETWORL - PERCEPTRON ###############################
 
 X_ann = X.copy()
-X_train_ann = X_train.copy()
-X_test_ann = X_test.copy()
-y_train_ann = y_train.copy()
+X_train_ann = np.array(X_train.copy())
+X_test_ann = np.array(X_test.copy())
+y_train_ann = np.array(y_train.copy())
 
 
 class NeuralNetwork():
@@ -630,19 +698,84 @@ y_pred = []
 for i in range(len(X_test_ann)):
     y_pred.append( neural_network.think(X_test_ann[i]))
 
+plt.hist(y_pred)
+
 for q in range(len(y_pred)):
     if y_pred[q]<0.50:
         y_pred[q]=0
     else: y_pred[q] = 1
 
-from sklearn.metrics import confusion_matrix
 cm = confusion_matrix(y_test, y_pred)
 (cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1])
 
 benchmark = max(benchmark, (cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1]))       
 print(cm)
 print('>>>   Accuracy of this model is : {0:.2%}'.format((cm[0][0] + cm[1][1] )/ (cm[0][0] + cm[1][1] + cm[1][0] + cm[0][1])))
+print('>>>   The investment return when this model is applied is:  €{:0,.2f}'.format(cm[0][0]*0 + cm[1][1]*500 + cm[1][0]*(-140) + cm[0][1]*(-450)).replace('€-','-€'))
 print(">>>   Best accuracy of prediction was {0:.2%}".format(benchmark)) 
 print(">>>   Current best prediction is {0:.2%}".format(benchmark))        
 
 
+### TABLe WITH SCORE COMPARISSON 
+
+def train_accuracy(model):
+    model.fit(X_train, y_train)
+    test_accuracy = model.score(X_test, y_test)
+    testn_accuracy = np.round(test_accuracy*100, 2)
+    return train_accuracy
+
+'''Models with best training accuracy:'''
+test_accuracy = pd.DataFrame({'Train_accuracy(%)':[train_accuracy(regressor), train_accuracy(LR), train_accuracy(LR_PCA), train_accuracy(dtree), train_accuracy(rfc), train_accuracy(dt_entr), train_accuracy(rf_entr), train_accuracy(BernNB)]})
+test_accuracy.index = ['LinearReg', 'LogReg', 'LogReg_PCA', 'Dec_tree', 'RandForr', 'Dec_tree_entr', 'RandFor_entr', 'BernNB']
+sorted_train_accuracy = train_accuracy.sort_values(by = 'Train_accuracy(%)', ascending = False)
+print('**Training Accuracy of the Classifiers:**')
+print(sorted_test_accuracy)
+
+'''Create a function that returns mean cross validation score for different models.'''
+#def x_val_score(model):
+#    from sklearn.model_selection import cross_val_score
+#    x_val_score = cross_val_score(model, X_train, y_train, cv = 10, scoring = 'accuracy').mean()
+#    x_val_score = np.round(x_val_score*100, 2)
+#    return x_val_score
+#
+#"""Let's perform k-fold (k=10) cross validation to find the classifier with the best cross validation accuracy."""
+#x_val_score = pd.DataFrame({'X_val_score(%)':[x_val_score(regressor)]})#, x_val_score(LR), x_val_score(LR_PCA), x_val_score(dtree), x_val_score(rfc), x_val_score(dt_entr), x_val_score(rf_entr), x_val_score(BernNB)]}
+#x_val_score.index =  ['LinearReg', 'LogReg', 'LogReg_PCA', 'Dec_tree', 'RandForr', 'Dec_tree_entr', 'RandFor_entr', 'BernNB']
+#sorted_x_val_score = x_val_score.sort_values(by = 'X_val_score(%)', ascending = False) 
+#bold('**Models 10-fold Cross Validation Score:**')
+#display(sorted_x_val_score)
+#suppress_warnings()
+
+#'''For SVC, the following hyperparameters are usually tunned.'''
+#svc_params = {'C': [6, 7, 8, 9, 10, 11, 12], 
+#              'kernel': ['linear','rbf'],
+#              'gamma': [0.5, 0.2, 0.1, 0.001, 0.0001]}
+#
+#"""Tune SVC's hyperparameters."""
+#tune_hyperparameters(svc, params = svc_params)
+#svc_best_score, svc_best_params = best_score, best_params
+
+
+
+#'''Create a dataframe of tunned scores and sort them in descending order.'''
+#tunned_scores = pd.DataFrame({'Tunned_accuracy(%)': [lr_best_score, gbc_best_score, svc_best_score, dt_best_score, rf_best_score, knn_best_score, abc_best_score, etc_best_score]})
+#tunned_scores.index = ['LR', 'GBC', 'SVC', 'DT', 'RF', 'KNN', 'ABC', 'ETC']
+#sorted_tunned_scores = tunned_scores.sort_values(by = 'Tunned_accuracy(%)', ascending = False)
+#bold('**Models Accuracy after Optimization:**')
+#display(sorted_tunned_scores)
+
+'''#4.Create a function that compares cross validation scores with tunned scores for different models by plotting them.'''
+def compare_scores(accuracy):
+    global ax1   
+    font_size = 15
+    title_size = 18
+    ax1 = accuracy.plot.bar(legend = False,  title = 'Models %s' % ''.join(list(train_accuracy.columns)), figsize = (18, 5), color = 'sandybrown')
+    ax1.title.set_size(fontsize = title_size)
+    # Removes square brackets and quotes from column name after to converting list.
+#    pct_bar_labels()
+    plt.ylabel('% Accuracy', fontsize = font_size)
+    plt.show()
+
+'''Compare cross validation scores with tunned scores to find the best model.'''
+#bold('**Comparing Cross Validation Scores with Optimized Scores:**')
+compare_scores(sorted_train_accuracy)
