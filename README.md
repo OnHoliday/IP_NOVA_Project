@@ -29,3 +29,8 @@ Modling: 1000  -> everyone describe his own model -> why we chose that one, gene
 Model selection: 400 -> explain k fold crossvalidation + model graph
 Selected model Tuning: 100 explain what grid search does
 Conclusion: 300
+
+
+TO DO 12/11
+-put some coments to explain what is happening in visualizatino section ( a lot of graph dont have comments and how to execute them in what order)
+-make corssvalidation for every model happend 
