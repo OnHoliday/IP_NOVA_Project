@@ -1029,18 +1029,18 @@ print(">>>   Current best prediction is {0:.2%}".format(benchmark))
 f_Score_svc = cm[0][0] * 0 + cm[1][1] * 500 + cm[1][0] * (-140) + cm[0][1] * (-450)
 
 
-ver=[10000, 7500]
-ver2=[12000, 8300]
+ver=[score_rf, score_svc]
+ver2=[f_Score_rf, f_Score_svc]
 labels=['RF', 'SVC']
 f1=['Random Forest', 'Support Vector Classification']
 y_pos = np.arange(len(f1))
 f2=[f_Score_rf, f_Score_svc]
 plt.bar(y_pos, ver2, alpha=0.5, color='green', width=0.5)
-plt.bar(y_pos, ver, alpha=0.5, color='darkblue', width=0.5)
-plt.xticks(y_pos, f1, size=15)
+plt.bar(y_pos, ver, alpha=0.5, color='green', width=0.5)
+plt.xticks(y_pos, f1, size=20)
 plt.ylabel('')
 plt.yticks(size=15)
-plt.title('Effect of model tuning using Grid Search (€)', color='grey', fontweight='bold', size=25)
+plt.title('Effect of model tuning using Grid Search (€)', color='grey', fontweight='bold', size=20)
 plt.show()
 
 
@@ -1048,5 +1048,7 @@ plt.bar(y_pos, f2, alpha=0.5, color='green')
 plt.xticks(y_pos, f1, size=15)
 plt.ylabel('')
 plt.yticks(size=15)
-plt.title('Final monetary value of each model(€)', color='grey', fontweight='bold', size=25)
+plt.xticks(size=15)
+plt.title('Final monetary value of each model(€)', color='grey', fontweight='bold', size=20)
 plt.show()
+
