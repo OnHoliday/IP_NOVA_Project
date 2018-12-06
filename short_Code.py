@@ -416,7 +416,7 @@ train_accuracy = pd.DataFrame({'Train_accuracy(%)': [train_accuracy(LR),
                                                      train_accuracy(BernNB), train_accuracy(svc)]})
 train_accuracy.index = ['Logistic Regression', 'Logistic Regression with PCA', 'Decision Tree', 'Random Forest', 
                         'Naive Bayes', 'Support Vector Classification']
-train_accuracy.loc['Perceptron'] = ann_accuracy
+train_accuracy.loc['Perceptron'] = np.round(ann_accuracy*100, 2)
 sorted_train_accuracy = train_accuracy.sort_values(by='Train_accuracy(%)', ascending=False)
 
 
@@ -472,7 +472,7 @@ plt.rcdefaults()
 
 sns.set_style('darkgrid')
 y_pos = np.arange(len(mon_1))
-my_colors=['red','red','red', 'red', 'red', 'green', 'green']
+my_colors=['red','green','red', 'red', 'red', 'green', 'green']
 plt.barh(y_pos, mon_2, align='center', alpha=0.5, color=my_colors)
 plt.yticks(y_pos, mon_1, size=12)
 plt.xticks(size=12)
@@ -610,16 +610,12 @@ gridrf.fit(X_train, y_train)
 #f_Score_rf = ROI(gridrf, X_test, y_test)
 
 
-# Checking best parameters
-gridrf.best_params_
+####run together til end ####
 
 grid_predictions=gridrf.predict(X_test)
 
 grid_matrix_rf = confusion_matrix(y_test, grid_predictions)
 
-
-
-#################
 
 rfc_grid_predictions = pd.Series(grid_predictions.copy())
 x_t = X_test.copy()
@@ -629,32 +625,6 @@ x_t['Exited'] = y_t.values
 x_t['Pred'] = rfc_grid_predictions.values
 df_safe_rfc_test1 = x_t
 
-
-
-
-#### plotting the comparison before and after CV###########
-
-
-ver=[a, b]
-ver2=[ROI(gridrf, X_test, y_test), ROI(gridsvc, X_test, y_test)]
-labels=['RF', 'SVC']
-f1=['Random Forest', 'Support Vector Classification']
-y_pos = np.arange(len(f1))
-f2=ver2.copy()
-plt.bar(y_pos, ver2, alpha=0.5, color='green', width=0.5)
-plt.bar(y_pos, ver, alpha=0.5, color='green', width=0.5)
-plt.xticks(y_pos, f1, size=20)
-plt.ylabel('')
-plt.yticks(size=15)
-plt.title('Effect of model tuning using Grid Search (€)', color='grey', fontweight='bold', size=20)
-plt.show()
-
-#####
-
-####
-
-
-###### the second test of rfc ######
 df_second_test = df_safe_rfc_test1[df_safe_rfc_test1['Pred']==0]
 df_second_test_ones = df_safe_rfc_test1[df_safe_rfc_test1['Pred']==1]
 #df_second_test_ones_withoutIndex =  df_second_test_ones.drop(['index'], axis =1)
@@ -666,10 +636,7 @@ X_second_test = df_second_test_to_test
 
 
 grid_predictions=gridsvc.predict(X_second_test)
-grid_matrix = confusion_matrix(y_second_test, grid_predictions)
-cm = confusion_matrix(y_second_test, grid_predictions)  # printing the confusion matrix
-print('>>>   The investment return when this model is applied is:  €{:0,.2f}'.format(
-   cm[1][1] * 590 +  cm[0][1] * (-250)).replace('€-', '-€'))
+
 
 df_second_test_to_test['Pred'] = grid_predictions
 
@@ -683,10 +650,26 @@ x_t['Pred3'] = x_t['Pred2'].fillna(0).astype('int') + x_t['Pred']
 
 
 cm = confusion_matrix(y_test, x_t['Pred3'])
-f_Score_svc = cm[0][0] * 0 + cm[1][1] * 590 + cm[1][0] * (-300) + cm[0][1] * (-250)
-
+both_models = cm[0][0] * 0 + cm[1][1] * 590 + cm[1][0] * (-300) + cm[0][1] * (-250)
+###end
 
 
 ####
+#### plotting the comparison before and after CV###########
 
+c=0
+ver=[a, b,c]
+ver2=[ROI(gridrf, X_test, y_test), ROI(gridsvc, X_test, y_test), both_models]
+labels=['RF', 'SVC', 'RF & SVC']
+f1=['Random Forest', 'Support Vector Classification', 'Both models' ]
+y_pos = np.arange(len(f1))
+plt.bar(y_pos, ver2, alpha=0.5, color='limegreen', width=0.5)
+plt.bar(y_pos, ver, alpha=0.5, color='darkgreen', width=0.5)
+plt.xticks(y_pos, f1, size=20)
+plt.ylabel('')
+plt.yticks(size=15)
+plt.title('Effect of model tuning using Grid Search (€)', color='grey', fontweight='bold', size=20)
+plt.show()
+
+#####
 #####
