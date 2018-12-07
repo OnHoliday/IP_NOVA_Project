@@ -411,22 +411,33 @@ def train_accuracy(model):
 
 
 '''Models with best training accuracy:'''
-train_accuracy = pd.DataFrame({'Train_accuracy(%)': [train_accuracy(LR),
-                                                     train_accuracy(LR_PCA), train_accuracy(dtree), train_accuracy(rfc),
-                                                     train_accuracy(BernNB), train_accuracy(svc)]})
-train_accuracy.index = ['Logistic Regression', 'Logistic Regression with PCA', 'Decision Tree', 'Random Forest', 
-                        'Naive Bayes', 'Support Vector Classification']
+
+#setting up a DataFrame with the values
+train_accuracy = pd.DataFrame({'Train_accuracy(%)': 
+                                                    [train_accuracy(LR),
+                                                     train_accuracy(LR_PCA),
+                                                     train_accuracy(dtree), 
+                                                     train_accuracy(rfc),
+                                                     train_accuracy(BernNB), 
+                                                     train_accuracy(svc)]}
+                                                    )
+    
+train_accuracy.index = ['Logistic Regression',
+                                        'Logistic Regression with PCA', 
+                                        'Decision Tree', 
+                                        'Random Forest', 
+                                        'Naive Bayes',
+                                        'Support Vector Classification']
+#adding perceptron
 train_accuracy.loc['Perceptron'] = np.round(ann_accuracy*100, 2)
-sorted_train_accuracy = train_accuracy.sort_values(by='Train_accuracy(%)', ascending=False)
 
-
-###### plot all the models accuracy #########
 
 acc = train_accuracy.reset_index()
 acc = acc.sort_values(by=['Train_accuracy(%)'], ascending=True)
+
+###### plot all the models accuracy #########
 acc_1 = list(acc['index'])
 acc_2 = list(acc['Train_accuracy(%)'])
-
 sns.set_style('darkgrid')
 y_pos = np.arange(len(acc_1))
 plt.barh(y_pos, acc_2, align='center', alpha=0.5, color='#005F91')
@@ -449,6 +460,9 @@ def ROI(estimator, x, y):
 
     return ROI
 
+
+##scoring each model ###
+    
 score_rf = ROI(rfc, X_test, y_test)
 score_svc = ROI(svc, X_test, y_test)
 score_nb = ROI(BernNB, X_test, y_test)
@@ -457,15 +471,14 @@ score_log_pca = ROI(LR_PCA, X_test, y_test)
 score_tree = ROI(dtree, X_test, y_test)
 
 
-
-
 mon_1 = ['Random Forrest', 'Support Vector Machine', 'Naive Bays', 'Logistic Regression','Logistic regression with PCA', 'Decision Tree', 'Perceptron']
 mon_2 = [score_rf, score_svc, score_nb, score_log, score_log_pca, score_tree, score_NN]
+
+# reversing
 mon_1 = mon_1[::-1]
 mon_2 = mon_2[::-1]
 
-#### plotting ervything  ########
-
+#### plotting the roi of each model in color   ########
 import matplotlib.pyplot as plt;
 
 plt.rcdefaults()
@@ -498,19 +511,28 @@ def x_val_score(model):
 
 
 """Let's perform k-fold (k=10) cross validation to find the classifier with the best cross validation accuracy."""
-x_val_score = pd.DataFrame({'X_val_score(%)': [x_val_score(LR), x_val_score(LR_PCA), x_val_score(dtree),
-                                               x_val_score(rfc),
-                                               x_val_score(BernNB), x_val_score(svc)]})
-x_val_score.index = ['Logistic Regression', 'Logistic Regression with PCA', 'Deision Tree', 'Random Forest', 
-                        'Naive Bayes', 'Support Vector Classification']
-sorted_x_val_score = x_val_score.sort_values(by='X_val_score(%)', ascending=False)
-print('**Models 10-fold Cross Validation Score:**')
-print(sorted_x_val_score)
+x_val_score = pd.DataFrame({'X_val_score(%)': 
+                                            [x_val_score(LR), 
+                                             x_val_score(LR_PCA),
+                                             x_val_score(dtree),
+                                             x_val_score(rfc),
+                                             x_val_score(BernNB), 
+                                             x_val_score(svc)]}
+                                            )
+    
+x_val_score.index = ['Logistic Regression', 
+                                 'Logistic Regression with PCA',
+                                 'Deision Tree', 
+                                 'Random Forest', 
+                                 'Naive Bayes',
+                                 'Support Vector Classification']
 
-######   plot it  #######
 
 acc = x_val_score.reset_index()
 acc = acc.sort_values(by=['X_val_score(%)'], ascending=True)
+ 
+######   plot it  #######
+
 acc_1 = list(acc['index'])
 acc_2 = list(acc['X_val_score(%)'])
 
@@ -525,39 +547,43 @@ plt.show()
 
 
 
-######### cross validation with ROI
+######### cross validation with ROI as a metric ######
 
 from sklearn.model_selection import cross_val_score
-
-
-def ROI(estimator, x, y):
-    yPred = estimator.predict(x)
-    cm = confusion_matrix(y, yPred)
-    ROI = cm[0][0] * 0 + cm[1][1] * 590 + cm[1][0] * (-300) + cm[0][1] * (-250)
-
-    return ROI
-
 def cv(model):
     ROI_scores = cross_val_score(model, X_train, y_train, scoring = ROI, cv=12, n_jobs=-2).mean()
     return ROI_scores
 
-cv_money = pd.DataFrame({'Monetary Score after Cross-Validation': [cv(LR), cv(LR_PCA), cv(dtree), cv(rfc), cv(BernNB), cv(svc)]})
-cv_money.index = ['Logistic Regression', 'Logistic regression with PCA', 'Decision Tree', 'Random Forrest', 'Naive Bays', "Support Vector Machine"]
+cv_money = pd.DataFrame({'Monetary Score after Cross-Validation': 
+                                        [cv(LR), 
+                                         cv(LR_PCA), 
+                                         cv(dtree), 
+                                         cv(rfc), 
+                                         cv(BernNB), 
+                                         cv(svc)]}
+                                        )
+    
+cv_money.index = ['Logistic Regression',
+                              'Logistic regression with PCA', 
+                              'Decision Tree', 
+                              'Random Forrest', 
+                              'Naive Bays', 
+                              "Support Vector Machine"]
+
 sortedcv_money = cv_money.sort_values(by='Monetary Score after Cross-Validation', ascending=True)
 sortedcv_money['Monetary Score after Cross-Validation']*=3 #make results comparable with reluts on the test set by extrapolation
 print('**Training Accuracy of the Classifiers:**')
 print(sortedcv_money)
 
-#for later comparison after grid search
+#####saving the results from svc and rfc for later comparison after grid search
 a = sortedcv_money.iloc[5,0]
 b = sortedcv_money.iloc[4,0]
 
 
 
-######plotting the results
+######plotting the results######
 acc = sortedcv_money.reset_index()
-#acc = acc.sort_values(by=['Monetary Score after Cross-Validation'], ascending=True)
-acc_1 = list(acc['index'])#list(['Random Forrest', 'Support Vector Machine', 'Naive Bays', 'Logistic Regression','Logistic regression with PCA', 'Decision Tree'])
+acc_1 = list(acc['index'])
 acc_2 = list(acc['Monetary Score after Cross-Validation'])
 y_pos = np.arange(len(acc_1))
 sns.set_style('darkgrid')
@@ -570,10 +596,9 @@ plt.title('Monetary Score of each model after Cross-Validation (€)',color='gre
 plt.show()
 
 
-###GRID SEARCH FOR BETTER RESULTS########
+########GRID SEARCH FOR BETTER RESULTS########
 
 ''' !!!!!!!!!!! ATTENTION THIS TAKES SOME TIME !!!!!!!!!!!!!!!!!!'''
-
 
 from sklearn.model_selection import GridSearchCV
 
@@ -581,53 +606,43 @@ param_grid = {'C': [0.1, 1, 10, 100, 1000], 'gamma': [1, 0.1, 0.01, 0.001, 0.000
 
 gridsvc = GridSearchCV(SVC(), param_grid, scoring = ROI,refit=True, verbose=2, n_jobs=-1, cv=12)
 
-gridsvc.fit(X_train, y_train)
-
-#f_Score_svc = ROI(gridsvc, X_test, y_test)
-#
-#gridsvc.best_params_
-#
-#grid_predictions = gridsvc.predict(X_test)
-#
-#grid_matrixsvc = confusion_matrix(y_test, grid_predictions)
+gridsvc.fit(X_train, y_train) #here the grid search happens 
 
 
-###GRID SEARCH FOR BETTER RESULTS######## 
+
+#####GRID SEARCH FOR BETTER RESULTS######## 
 
 ''' !!!!!!!!!!! ATTENTION THIS TAKES EVEN MORE TIME !!!!!!!!!!!!!!!!!!'''
 
 from sklearn.model_selection import GridSearchCV
 
-param_grid = {'criterion': ['gini', 'entropy'],'max_features': ['auto', 'sqrt', 'log2'], 'max_depth': [2, 5, 10, 50, 100],
-              'min_samples_split': [2, 5, 10, 50, 100]}
+param_grid = {'criterion': ['gini', 'entropy'],'max_features': ['auto', 'sqrt', 'log2'], 'max_depth': [2, 5, 10, 50, 100],'min_samples_split': [2, 5, 10, 50, 100]}
 
-gridrf = GridSearchCV(RandomForestClassifier(n_estimators=300, random_state=0), param_grid,
-                    scoring = ROI, refit=True, verbose=2, n_jobs=-1, cv =12)
+gridrf = GridSearchCV(RandomForestClassifier(n_estimators=300, random_state=0), param_grid, scoring = ROI, refit=True, verbose=2, n_jobs=-1, cv =12)
 
-gridrf.fit(X_train, y_train)
+gridrf.fit(X_train, y_train) #here the grid search happens 
 
 
-#f_Score_rf = ROI(gridrf, X_test, y_test)
 
+# here we also want to be able to combine the to modles so first we use the prdictions from the rfc then filter for when it predicted does  not leave (the curical thing) 
+#then test the predictions of the svc and finally combining everything
 
 ####run together til end ####
 
 grid_predictions=gridrf.predict(X_test)
-
 grid_matrix_rf = confusion_matrix(y_test, grid_predictions)
-
-
 rfc_grid_predictions = pd.Series(grid_predictions.copy())
+
 x_t = X_test.copy()
-y_t = y_test.copy()#.reset_index(drop=True)
+y_t = y_test.copy()
 
 x_t['Exited'] = y_t.values
 x_t['Pred'] = rfc_grid_predictions.values
+
 df_safe_rfc_test1 = x_t
 
 df_second_test = df_safe_rfc_test1[df_safe_rfc_test1['Pred']==0]
 df_second_test_ones = df_safe_rfc_test1[df_safe_rfc_test1['Pred']==1]
-#df_second_test_ones_withoutIndex =  df_second_test_ones.drop(['index'], axis =1)
 
 df_second_test_to_test = df_second_test.iloc[:,:-2]
 y_second_test = df_second_test['Exited']
@@ -648,14 +663,13 @@ x_t.drop(['Exited'], inplace =True, axis=1)
 x_t['Pred2'] = df_second_test_to_test['Pred']
 x_t['Pred3'] = x_t['Pred2'].fillna(0).astype('int') + x_t['Pred']
 
-
 cm = confusion_matrix(y_test, x_t['Pred3'])
 both_models = cm[0][0] * 0 + cm[1][1] * 590 + cm[1][0] * (-300) + cm[0][1] * (-250)
 ###end
 
 
 ####
-#### plotting the comparison before and after CV###########
+#### plotting the comparison before and after grid search and the combined predictions ###########
 
 c=0
 ver=[a, b,c]
