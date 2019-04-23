@@ -1,5 +1,5 @@
 # IP_NOVA_Project
-To create project for intro to programming class
+Binary classification problem for chrun prediction.
 
 Remember to check for outliers
 use statsmodels to perform logistic regression and print summary
